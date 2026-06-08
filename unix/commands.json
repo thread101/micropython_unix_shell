@@ -1,0 +1,29 @@
+{
+    "pwd" : ["pwd", "return present working directory"],
+    "echo" : ["echo", "echos the specified text"],
+    "cd" : ["cd", "changes pwd as specified"],
+    
+    "set": ["set", "sets an environment variable"],
+    "unset": ["unset", "removes an environment variable"],
+    "reset": ["reset", "clears environment variables and setting default"],
+    
+    "useradd" : ["useradd", "adds a new user to the system"],
+    "userdel" : ["userdel", "removes a user from the system"],
+    "passwd": ["passwd", "setting the system password"],
+    
+    "ls" : ["ls", "lists the directories and files in pwd"],
+    "su" : ["su", "switches to the specified user"],
+    "du" : ["du", "calculates the disk used by specified path"],
+    "mkdir" : ["mkdir", "creates a directory(s) specified"],
+    "mv" : ["mv", "moves scr to dest as specified"],
+    "cp" : ["cp", "copies scr to dest as specified"],
+    "rm" : ["rm", "delete files and directories"],
+    "touch" : ["touch", "creates a new empty file"],
+    "cat" : ["type", "print contents of a file"],
+    
+    "man" : ["man", "returns manuals of command specified else all commands"],
+    "ifconfig" : ["net", "control the network interface"],
+    
+    "date" : ["date", "returns the current time and date"],
+    "uname" : ["uname", "returns the system version infomation"]
+}

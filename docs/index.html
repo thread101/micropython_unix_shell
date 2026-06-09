@@ -268,12 +268,12 @@
         details: 'Create one or more empty files.',
         example: '$ touch myfile.txt\n$ touch file1.txt file2.txt'
       },
-      cat: {
-        name: 'cat',
-        usage: 'cat file [file ...]',
+      type: {
+        name: 'type',
+        usage: 'type file [file ...]',
         description: 'Display file contents',
         details: 'Print the contents of one or more files.',
-        example: '$ cat myfile.txt\n$ cat file1.txt file2.txt'
+        example: '$ type myfile.txt\n$ type file1.txt file2.txt'
       },
       echo: {
         name: 'echo',
@@ -366,12 +366,12 @@
         details: 'Clear all custom variables and restore defaults.',
         example: '$ reset'
       },
-      ifconfig: {
-        name: 'ifconfig',
-        usage: 'ifconfig [action]',
+      net: {
+        name: 'net',
+        usage: 'net [action]',
         description: 'Configure network interface',
         details: 'Control WiFi. Actions: up, down, scan, connect, close',
-        example: '$ ifconfig\n$ ifconfig scan\n$ ifconfig connect\n$ ifconfig close'
+        example: '$ net\n$ net scan\n$ net connect\n$ net close'
       },
       date: {
         name: 'date',
@@ -415,12 +415,12 @@
         help += `<div class="command-item"><span class="keyword">${cmd}</span> - ${data.description}</div>`;
       }
       help += '</div></div>';
-      help += '<div class="help-section"><div class="help-title">Command Categories:</div><div class="help-content">';
+      help += '<div class="help-section"><div class="help-title">Command typeegories:</div><div class="help-content">';
       help += '<div class="command-item"><span class="keyword">Navigation:</span> pwd, cd, ls</div>';
-      help += '<div class="command-item"><span class="keyword">File Operations:</span> touch, cat, mkdir, cp, mv, rm, echo</div>';
+      help += '<div class="command-item"><span class="keyword">File Operations:</span> touch, type, mkdir, cp, mv, rm, echo</div>';
       help += '<div class="command-item"><span class="keyword">Users:</span> useradd, userdel, passwd, users, su</div>';
       help += '<div class="command-item"><span class="keyword">Environment:</span> set, unset, reset</div>';
-      help += '<div class="command-item"><span class="keyword">Network:</span> ifconfig</div>';
+      help += '<div class="command-item"><span class="keyword">Network:</span> net</div>';
       help += '<div class="command-item"><span class="keyword">System:</span> date, uname, du</div>';
       help += '</div></div>';
       help += '<div class="hint">Type "man [command]" for detailed help</div>';
@@ -503,7 +503,7 @@
       examples += '<div class="example">$ mkdir /backup<br>$ cp /important/file.txt /backup/<br>$ cp /important/data/ /backup/</div>';
 
       examples += '<div class="description">Create a log file:</div>';
-      examples += '<div class="example">$ echo "System started" > /var/log.txt<br>$ echo "User logged in" >> /var/log.txt<br>$ cat /var/log.txt</div>';
+      examples += '<div class="example">$ echo "System started" > /var/log.txt<br>$ echo "User logged in" >> /var/log.txt<br>$ type /var/log.txt</div>';
 
       examples += '<div class="description">Manage users:</div>';
       examples += '<div class="example">$ useradd alice /home/alice<br>$ passwd alice<br>$ su alice<br>$ users</div>';
@@ -512,7 +512,7 @@
       examples += '<div class="example">$ du /<br>$ du -v /home</div>';
 
       examples += '<div class="description">Network operations:</div>';
-      examples += '<div class="example">$ ifconfig<br>$ ifconfig scan<br>$ ifconfig connect</div>';
+      examples += '<div class="example">$ net<br>$ net scan<br>$ net connect</div>';
 
       examples += '</div></div>';
       printRaw(examples);

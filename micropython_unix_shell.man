@@ -1,0 +1,654 @@
+.TH "micropython_unix_shell" "1" "2026-06-09" "1.0" "MicroPython Unix Shell Manual"
+.SH NAME
+micropython_unix_shell \- A lightweight Unix-like shell for MicroPython systems
+.SH SYNOPSIS
+.B shell.run(username)
+.SH DESCRIPTION
+MicroPython Unix Shell is a command-line interface providing Unix-like functionality for MicroPython systems such as Raspberry Pi Pico. It includes file system operations, user management, environment configuration, and network control.
+
+.SH SHELL BUILT-IN COMMANDS
+
+.TP
+.B clear
+Clear the terminal screen.
+
+.TP
+.B exit
+Exit the shell and logout the current user.
+
+.TP
+.B env
+Display all environment variables and their current values.
+
+.SH FILE SYSTEM COMMANDS
+
+.SS pwd(1)
+.B pwd
+.br
+Print the current working directory path.
+.TP
+.B DESCRIPTION
+Returns the absolute path of the current working directory.
+.TP
+.B EXAMPLE
+.nf
+$ pwd
+/home/user
+.fi
+
+.SS cd(1)
+.B cd [directory]
+.br
+Change the current working directory.
+.TP
+.B DESCRIPTION
+Navigate to the specified directory. If no directory is specified, changes to the user's home directory. Supports absolute and relative paths.
+.TP
+.B EXAMPLE
+.nf
+$ cd /home
+$ cd ..
+$ cd my-directory
+.fi
+
+.SS ls(1)
+.B ls [path]
+.br
+List directory contents.
+.TP
+.B DESCRIPTION
+Display files and directories in the specified path or current directory. Shows file names, types, and sizes in KB. Directories are marked with "/" and displayed in blue.
+.TP
+.B EXAMPLE
+.nf
+$ ls
+$ ls /home/user
+.fi
+
+.SS mkdir(1)
+.B mkdir directory [directory ...]
+.br
+Create new directories.
+.TP
+.B DESCRIPTION
+Create one or more directories. Fails if directory already exists or if parent directory does not exist.
+.TP
+.B EXAMPLE
+.nf
+$ mkdir newdir
+$ mkdir dir1 dir2 dir3
+.fi
+
+.SS touch(1)
+.B touch file [file ...]
+.br
+Create new empty files.
+.TP
+.B DESCRIPTION
+Create one or more empty files. Fails if file already exists.
+.TP
+.B EXAMPLE
+.nf
+$ touch myfile.txt
+$ touch file1.txt file2.txt
+.fi
+
+.SS type(1)
+.B type file [file ...]
+.br
+Display file contents.
+.TP
+.B DESCRIPTION
+Print the contents of one or more files to the standard output. Files are displayed in chunks with file path headers.
+.TP
+.B EXAMPLE
+.nf
+$ type myfile.txt
+$ type file1.txt file2.txt
+.fi
+
+.SS cp(1)
+.B cp source [source ...] destination
+.br
+Copy files or directories.
+.TP
+.B DESCRIPTION
+Copy one or more source files or directories to a destination. If destination exists as a file, prompts for action (Overwrite, Append, Cancel). When copying directories, performs recursive copy.
+.TP
+.B OPTIONS
+.TP
+(interactive)
+If destination file exists, prompts for [O]verwrite, [A]ppend, or [C]ancel.
+.TP
+.B EXAMPLE
+.nf
+$ cp file.txt /backup/
+$ cp dir1 /backup/
+$ cp file1.txt file2.txt /backup/
+.fi
+
+.SS mv(1)
+.B mv source [source ...] destination
+.br
+Move or rename files and directories.
+.TP
+.B DESCRIPTION
+Move one or more source files or directories to a destination. Can be used to rename files. If moving multiple sources, destination must be a directory.
+.TP
+.B EXAMPLE
+.nf
+$ mv oldname.txt newname.txt
+$ mv file1.txt file2.txt /archive/
+.fi
+
+.SS rm(1)
+.B rm path [path ...]
+.br
+Remove files and directories.
+.TP
+.B DESCRIPTION
+Delete one or more files or directories. For non-empty directories, prompts for confirmation before deletion. Performs recursive deletion for directories.
+.TP
+.B EXAMPLE
+.nf
+$ rm myfile.txt
+$ rm directory/
+.fi
+
+.SS du(1)
+.B du [-v] path
+.br
+Report disk usage.
+.TP
+.B DESCRIPTION
+Calculate total disk space used by a file or directory in KB and bytes. The -v (verbose) flag displays usage for each file and subdirectory.
+.TP
+.B OPTIONS
+.TP
+.B -v
+Verbose mode - display size for each item in path.
+.TP
+.B EXAMPLE
+.nf
+$ du /home/user
+/home/user size: 2.342 KB (2342 bytes)
+
+$ du -v /home/user
+  file1.txt 1.230 KB
+  file2.txt 1.112 KB
+/home/user size: 2.342 KB (2342 bytes)
+.fi
+
+.SH TEXT OUTPUT COMMANDS
+
+.SS echo(1)
+.B echo [text]
+.br
+Display text or redirect to file.
+.TP
+.B DESCRIPTION
+Print text to the console. Supports output redirection using > (write) or >> (append) operators.
+.TP
+.B OPERATORS
+.TP
+.B >
+Write text to file (overwrite if exists).
+.TP
+.B >>
+Append text to file.
+.TP
+.B EXAMPLE
+.nf
+$ echo "Hello, World!"
+$ echo "Log entry" > /tmp/log.txt
+$ echo "Another entry" >> /tmp/log.txt
+.fi
+
+.SH USER MANAGEMENT COMMANDS
+
+.SS useradd(1)
+.B useradd username homedir
+.br
+Add a new user account.
+.TP
+.B DESCRIPTION
+Create a new user account with specified home directory. Only admin users can execute this command. If home directory doesn't exist, it will be created.
+.TP
+.B ARGUMENTS
+.TP
+.B username
+Name of the new user account.
+.TP
+.B homedir
+Path to user's home directory.
+.TP
+.B EXAMPLE
+.nf
+$ useradd alice /home/alice
+.fi
+
+.SS userdel(1)
+.B userdel username
+.br
+Delete a user account.
+.TP
+.B DESCRIPTION
+Remove a user account from the system. Only admin users can execute this command. Optionally removes the user's home directory.
+.TP
+.B ARGUMENTS
+.TP
+.B username
+Name of the user account to delete.
+.TP
+.B EXAMPLE
+.nf
+$ userdel alice
+remove alice's home '/home/alice' [Y/n] y
+.fi
+
+.SS passwd(1)
+.B passwd [username]
+.br
+Set or change a user's password.
+.TP
+.B DESCRIPTION
+Change the password for the current user or (with admin privileges) for another user. Requires old password verifitypeion. New password must be confirmed.
+.TP
+.B ARGUMENTS
+.TP
+.B username
+(Optional) User whose password to change. If omitted, changes current user's password.
+.TP
+.B EXAMPLE
+.nf
+$ passwd
+[admin] passwd: ****
+newpasswd> ****
+confirm> ****
+password updated
+
+$ passwd alice
+[alice] passwd: ****
+newpasswd> ****
+confirm> ****
+password updated
+.fi
+
+.SS users(1)
+.B users
+.br
+List all user accounts.
+.TP
+.B DESCRIPTION
+Display a list of all user accounts on the system, one per line.
+.TP
+.B EXAMPLE
+.nf
+$ users
+admin
+alice
+bob
+.fi
+
+.SS su(1)
+.B su [username]
+.br
+Switch to another user account.
+.TP
+.B DESCRIPTION
+Start a new shell session as a different user. If no username specified, switches to admin user. Requires user's password.
+.TP
+.B ARGUMENTS
+.TP
+.B username
+(Optional) User to switch to. Defaults to admin.
+.TP
+.B EXAMPLE
+.nf
+$ su
+$ su alice
+.fi
+
+.SH ENVIRONMENT COMMANDS
+
+.SS set(1)
+.B set name value
+.br
+Set an environment variable.
+.TP
+.B DESCRIPTION
+Create or modify an environment variable that persists for the current shell session. Variables can be used in subsequent commands.
+.TP
+.B ARGUMENTS
+.TP
+.B name
+Variable name.
+.TP
+.B value
+Variable value.
+.TP
+.B EXAMPLE
+.nf
+$ set MYVAR "hello"
+$ set PROMPT "[{USER}]> "
+.fi
+
+.SS unset(1)
+.B unset name [name ...]
+.br
+Remove environment variables.
+.TP
+.B DESCRIPTION
+Delete one or more environment variables from the current session.
+.TP
+.B ARGUMENTS
+.TP
+.B name
+Name(s) of variable(s) to remove.
+.TP
+.B EXAMPLE
+.nf
+$ unset MYVAR
+$ unset VAR1 VAR2 VAR3
+.fi
+
+.SS reset(1)
+.B reset
+.br
+Reset environment to defaults.
+.TP
+.B DESCRIPTION
+Clear all custom environment variables and restore default values.
+.TP
+.B EXAMPLE
+.nf
+$ reset
+.fi
+
+.SH NETWORK COMMANDS
+
+.SS net(1)
+.B net [action]
+.br
+Configure network interface.
+.TP
+.B DESCRIPTION
+Display or control WiFi network interface. Provides network information and connection management.
+.TP
+.B ACTIONS
+.TP
+.B (no action)
+Display current network configuration and connection status.
+.TP
+.B up
+Activate the WiFi interface.
+.TP
+.B down
+Deactivate the WiFi interface.
+.TP
+.B scan
+Scan for available WiFi networks.
+.TP
+.B connect
+Connect to a WiFi network (interactive).
+.TP
+.B close
+Disconnect from current network.
+.TP
+.B EXAMPLE
+.nf
+$ net
+inet      : 192.168.1.100
+subnet    : 255.255.255.0
+gateway   : 192.168.1.1
+broadcast : 192.168.1.255
+state: connected
+
+$ net scan
+1. HomeNetwork
+2. GuestWiFi
+
+$ net connect
+---------- available networks ----------
+1. HomeNetwork
+2. GuestWiFi
+Enter network index or [C]ancel
+network index> 1
+(HomeNetwork) passwd> ****
+(HomeNetwork) ip: 192.168.1.100
+
+$ net up
+$ net down
+$ net close
+.fi
+
+.SH SYSTEM INFORMATION COMMANDS
+
+.SS date(1)
+.B date
+.br
+Display current date and time.
+.TP
+.B DESCRIPTION
+Print the system date and time in the format: YYYY-MM-DD HH:MM:SS
+.TP
+.B EXAMPLE
+.nf
+$ date
+2026-06-09 14:30:45
+.fi
+
+.SS uname(1)
+.B uname
+.br
+Display system information.
+.TP
+.B DESCRIPTION
+Print MicroPython version and platform information.
+.TP
+.B EXAMPLE
+.nf
+$ uname
+MicroPython x.x.x on platform
+.fi
+
+.SH DOCUMENTATION
+
+.SS man(1)
+.B man [command]
+.br
+Display command manual.
+.TP
+.B DESCRIPTION
+Show help information for a specific command or all available commands. Each entry displays the command name and a brief description.
+.TP
+.B ARGUMENTS
+.TP
+.B command
+(Optional) Command to display help for. If omitted, shows all commands.
+.TP
+.B EXAMPLE
+.nf
+$ man
+(pwd) DESCRIPTION: return present working directory
+(echo) DESCRIPTION: echos the specified text
+...
+
+$ man ls
+(ls) DESCRIPTION: lists the directories and files in pwd
+.fi
+
+.SH ENVIRONMENT VARIABLES
+
+The shell maintains several environment variables:
+
+.TP
+.B HOME
+User's home directory path.
+.TP
+.B USER
+Currently logged-in username.
+.TP
+.B HOST
+System hostname (default: "Micro pico").
+.TP
+.B PWD
+Current working directory.
+.TP
+.B LAST_ERROR
+Last error message (or "success" if last command succeeded).
+.TP
+.B PROMPT
+Custom prompt template.
+.TP
+.B CUSTOM VARIABLES
+User-defined variables set with the
+.B set
+command.
+
+.SS PROMPT FORMAT
+
+The PROMPT variable supports the following placeholders:
+
+.TP
+.B {USER}
+Current username.
+.TP
+.B {HOST}
+System hostname.
+.TP
+.B {PWD}
+Current working directory.
+.TP
+.B {DATE}
+Current date (YYYY-MM-DD).
+.TP
+.B {TIME}
+Current time (HH:MM:SS).
+.TP
+.B {LAST_STATUS}
+Status inditypeor (✔ or ✘).
+
+.SH EXAMPLES
+
+.SS Create and manage directories:
+.nf
+$ mkdir /projects
+$ cd /projects
+$ mkdir python node javascript
+$ ls
+.fi
+
+.SS Backup files:
+.nf
+$ mkdir /backup
+$ cp /important/file.txt /backup/
+$ cp /important/data/ /backup/
+.fi
+
+.SS Create a log file:
+.nf
+$ echo "System started" > /var/log.txt
+$ echo "User logged in" >> /var/log.txt
+$ type /var/log.txt
+.fi
+
+.SS Manage users:
+.nf
+$ useradd alice /home/alice
+$ passwd alice
+$ su alice
+$ users
+.fi
+
+.SS Check disk usage:
+.nf
+$ du /
+$ du -v /home
+.fi
+
+.SS Network operations:
+.nf
+$ net
+$ net scan
+$ net connect
+.fi
+
+.SH PERMISSIONS
+
+.TP
+.B admin
+The default administrator user with full system access. Can manage users, modify files anywhere, and execute privileged operations.
+
+.TP
+.B Regular Users
+Limited to their home directory and shared system areas. Cannot execute administrative commands like
+.B useradd,
+.B userdel,
+or
+.B net
+configuration.
+
+.SH SPECIAL FILES
+
+.TP
+.B /shell-config.json
+User account configuration file storing username-to-home-directory mappings.
+
+.TP
+.B /passwd.{username}.bin
+SHA256 hashed password file for each user account.
+
+.SH PLATFORM SUPPORT
+
+This shell is optimized for MicroPython systems including:
+.TP
+- Raspberry Pi Pico
+.TP
+- ESP32
+.TP
+- Other compatible MicroPython boards
+
+.SH KEYBOARD SHORTCUTS
+
+.TP
+.B Ctrl+C
+Send interrupt signal (SIGINT) to the shell.
+
+.SH LIMITATIONS
+
+.TP
+- No pipe operations (|)
+.TP
+- No command chaining with semicolon (;)
+.TP
+- Limited relative path support
+.TP
+- Passwords stored as SHA256 binary hashes
+.TP
+- Single user login at a time
+
+.SH RETURN VALUES
+
+Commands return 0 on success and 1 on failure. The status is tracked in the LAST_ERROR environment variable and displayed in the prompt with status inditypeors:
+
+.TP
+.B ✔ (green)
+Last command succeeded.
+.TP
+.B ✘ (red)
+Last command failed.
+
+.SH SEE ALSO
+
+For more information about MicroPython, visit:
+.TP
+https://micropython.org
+
+.SH AUTHOR
+
+MicroPython Unix Shell Contributors
+
+.SH VERSION
+
+Version 1.0 - 2026-06-09

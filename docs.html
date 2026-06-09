@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MicroPython Unix Shell - Interactive Documentation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .header {
+      background-color: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #8b949e;
+    }
+
+    .terminal {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 16px;
+    }
+
+    .output {
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .output::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .output::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+
+    .output::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 4px;
+    }
+
+    .prompt-line {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .prompt {
+      color: #58a6ff;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .command {
+      color: #a371f7;
+      flex: 1;
+    }
+
+    .success {
+      color: #3fb950;
+    }
+
+    .error {
+      color: #f85149;
+    }
+
+    .info {
+      color: #79c0ff;
+    }
+
+    .input-line {
+      display: flex;
+      align-items: center;
+      background-color: #0d1117;
+      border-top: 1px solid #30363d;
+      padding-top: 8px;
+    }
+
+    .input-prompt {
+      color: #58a6ff;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    input {
+      flex: 1;
+      background-color: transparent;
+      border: none;
+      color: #c9d1d9;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .hint {
+      color: #6e7681;
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 0 8px;
+    }
+
+    .commands-list {
+      color: #79c0ff;
+      margin: 8px 0;
+    }
+
+    .command-item {
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+
+    .help-section {
+      margin: 12px 0;
+      color: #c9d1d9;
+    }
+
+    .help-title {
+      color: #58a6ff;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .help-content {
+      margin-left: 16px;
+      line-height: 1.6;
+    }
+
+    .usage {
+      color: #79c0ff;
+      margin: 4px 0;
+    }
+
+    .description {
+      color: #8b949e;
+      margin: 4px 0 8px 0;
+    }
+
+    .example {
+      background-color: #161b22;
+      padding: 8px;
+      margin: 4px 0;
+      border-left: 2px solid #30363d;
+      color: #79c0ff;
+    }
+
+    .important {
+      color: #f85149;
+    }
+
+    .keyword {
+      color: #ff7b72;
+    }
+
+    .value {
+      color: #a371f7;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      MicroPython Unix Shell - Interactive Documentation | Type 'help' for commands
+    </div>
+    <div class="terminal">
+      <div class="output" id="output"></div>
+      <div class="input-line">
+        <span class="input-prompt">$ </span>
+        <input type="text" id="input" autofocus autocomplete="off" spellcheck="false">
+      </div>
+      <div class="hint">Type 'help' to see available commands • 'man [command]' for help on specific command</div>
+    </div>
+  </div>
+
+  <script>
+    const output = document.getElementById('output');
+    const input = document.getElementById('input');
+    let commandHistory = [];
+    let historyIndex = -1;
+
+    const commands = {
+      help: {
+        description: 'Display available commands',
+        execute: showHelp
+      },
+      man: {
+        description: 'Show detailed manual for a command',
+        execute: showManual
+      },
+      clear: {
+        description: 'Clear the terminal',
+        execute: clearTerminal
+      },
+      about: {
+        description: 'About MicroPython Unix Shell',
+        execute: showAbout
+      },
+      list: {
+        description: 'List all available commands',
+        execute: listCommands
+      },
+      examples: {
+        description: 'Show usage examples',
+        execute: showExamples
+      }
+    };
+
+    const commandDatabase = {
+      pwd: {
+        name: 'pwd',
+        usage: 'pwd',
+        description: 'Return present working directory',
+        details: 'Prints the absolute path of the current working directory.',
+        example: '$ pwd\n/home/user'
+      },
+      cd: {
+        name: 'cd',
+        usage: 'cd [directory]',
+        description: 'Change working directory',
+        details: 'Navigate to the specified directory. If no directory is specified, changes to home.',
+        example: '$ cd /home\n$ cd ..\n$ cd my-directory'
+      },
+      ls: {
+        name: 'ls',
+        usage: 'ls [path]',
+        description: 'List directory contents',
+        details: 'Display files and directories. Shows file sizes in KB.',
+        example: '$ ls\n$ ls /home/user'
+      },
+      mkdir: {
+        name: 'mkdir',
+        usage: 'mkdir directory [directory ...]',
+        description: 'Create directories',
+        details: 'Create one or more directories.',
+        example: '$ mkdir newdir\n$ mkdir dir1 dir2 dir3'
+      },
+      touch: {
+        name: 'touch',
+        usage: 'touch file [file ...]',
+        description: 'Create empty files',
+        details: 'Create one or more empty files.',
+        example: '$ touch myfile.txt\n$ touch file1.txt file2.txt'
+      },
+      cat: {
+        name: 'cat',
+        usage: 'cat file [file ...]',
+        description: 'Display file contents',
+        details: 'Print the contents of one or more files.',
+        example: '$ cat myfile.txt\n$ cat file1.txt file2.txt'
+      },
+      echo: {
+        name: 'echo',
+        usage: 'echo [text]',
+        description: 'Display text or redirect to file',
+        details: 'Print text to console. Use > to write or >> to append to file.',
+        example: '$ echo "Hello"\n$ echo "Log entry" > /tmp/log.txt\n$ echo "More" >> /tmp/log.txt'
+      },
+      cp: {
+        name: 'cp',
+        usage: 'cp source [source ...] destination',
+        description: 'Copy files or directories',
+        details: 'Copy one or more sources to destination. Prompts if destination exists.',
+        example: '$ cp file.txt /backup/\n$ cp dir1 /backup/\n$ cp file1.txt file2.txt /backup/'
+      },
+      mv: {
+        name: 'mv',
+        usage: 'mv source [source ...] destination',
+        description: 'Move or rename files',
+        details: 'Move files or directories to destination.',
+        example: '$ mv oldname.txt newname.txt\n$ mv file1.txt /archive/'
+      },
+      rm: {
+        name: 'rm',
+        usage: 'rm path [path ...]',
+        description: 'Remove files and directories',
+        details: 'Delete one or more files or directories. Prompts before deleting non-empty dirs.',
+        example: '$ rm myfile.txt\n$ rm directory/'
+      },
+      du: {
+        name: 'du',
+        usage: 'du [-v] path',
+        description: 'Report disk usage',
+        details: 'Calculate disk space used. Use -v for verbose output.',
+        example: '$ du /home/user\n$ du -v /home/user'
+      },
+      useradd: {
+        name: 'useradd',
+        usage: 'useradd username homedir',
+        description: 'Add new user account',
+        details: 'Create new user with home directory. Admin only.',
+        example: '$ useradd alice /home/alice'
+      },
+      userdel: {
+        name: 'userdel',
+        usage: 'userdel username',
+        description: 'Delete user account',
+        details: 'Remove user account. Admin only. Can optionally remove home directory.',
+        example: '$ userdel alice'
+      },
+      passwd: {
+        name: 'passwd',
+        usage: 'passwd [username]',
+        description: 'Set or change password',
+        details: 'Change password for current or specified user.',
+        example: '$ passwd\n$ passwd alice'
+      },
+      users: {
+        name: 'users',
+        usage: 'users',
+        description: 'List all user accounts',
+        details: 'Display all users on the system.',
+        example: '$ users'
+      },
+      su: {
+        name: 'su',
+        usage: 'su [username]',
+        description: 'Switch user account',
+        details: 'Start new shell session as different user. Defaults to admin.',
+        example: '$ su\n$ su alice'
+      },
+      set: {
+        name: 'set',
+        usage: 'set name value',
+        description: 'Set environment variable',
+        details: 'Create or modify an environment variable.',
+        example: '$ set MYVAR "hello"\n$ set PROMPT "[{USER}]> "'
+      },
+      unset: {
+        name: 'unset',
+        usage: 'unset name [name ...]',
+        description: 'Remove environment variables',
+        details: 'Delete one or more environment variables.',
+        example: '$ unset MYVAR\n$ unset VAR1 VAR2'
+      },
+      reset: {
+        name: 'reset',
+        usage: 'reset',
+        description: 'Reset environment to defaults',
+        details: 'Clear all custom variables and restore defaults.',
+        example: '$ reset'
+      },
+      ifconfig: {
+        name: 'ifconfig',
+        usage: 'ifconfig [action]',
+        description: 'Configure network interface',
+        details: 'Control WiFi. Actions: up, down, scan, connect, close',
+        example: '$ ifconfig\n$ ifconfig scan\n$ ifconfig connect\n$ ifconfig close'
+      },
+      date: {
+        name: 'date',
+        usage: 'date',
+        description: 'Display current date and time',
+        details: 'Show system date and time in YYYY-MM-DD HH:MM:SS format.',
+        example: '$ date\n2026-06-09 14:30:45'
+      },
+      uname: {
+        name: 'uname',
+        usage: 'uname',
+        description: 'Display system information',
+        details: 'Show MicroPython version and platform.',
+        example: '$ uname\nMicroPython x.x.x'
+      }
+    };
+
+    function print(text, className = '') {
+      const span = document.createElement('div');
+      if (className) span.className = className;
+      span.textContent = text;
+      output.appendChild(span);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function printRaw(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      output.appendChild(div);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function clearTerminal() {
+      output.innerHTML = '';
+      return '';
+    }
+
+    function showHelp() {
+      let help = '<div class="help-section"><div class="help-title">Available Commands:</div><div class="help-content">';
+      for (const [cmd, data] of Object.entries(commands)) {
+        help += `<div class="command-item"><span class="keyword">${cmd}</span> - ${data.description}</div>`;
+      }
+      help += '</div></div>';
+      help += '<div class="help-section"><div class="help-title">Command Categories:</div><div class="help-content">';
+      help += '<div class="command-item"><span class="keyword">Navigation:</span> pwd, cd, ls</div>';
+      help += '<div class="command-item"><span class="keyword">File Operations:</span> touch, cat, mkdir, cp, mv, rm, echo</div>';
+      help += '<div class="command-item"><span class="keyword">Users:</span> useradd, userdel, passwd, users, su</div>';
+      help += '<div class="command-item"><span class="keyword">Environment:</span> set, unset, reset</div>';
+      help += '<div class="command-item"><span class="keyword">Network:</span> ifconfig</div>';
+      help += '<div class="command-item"><span class="keyword">System:</span> date, uname, du</div>';
+      help += '</div></div>';
+      help += '<div class="hint">Type "man [command]" for detailed help</div>';
+      printRaw(help);
+      return '';
+    }
+
+    function listCommands() {
+      let list = '<div class="help-section"><div class="help-title">All Available Commands:</div><div class="help-content">';
+      for (const [name, data] of Object.entries(commandDatabase)) {
+        list += `<div class="command-item"><span class="keyword">${name}</span> - ${data.description}</div>`;
+      }
+      list += '</div></div>';
+      printRaw(list);
+      return '';
+    }
+
+    function showManual(args) {
+      if (!args || args.length === 0) {
+        print('Usage: man [command]', 'error');
+        print('Example: man ls', 'info');
+        return '';
+      }
+
+      const cmd = args[0];
+      if (!commandDatabase[cmd]) {
+        print(`Command '${cmd}' not found`, 'error');
+        return '';
+      }
+
+      const data = commandDatabase[cmd];
+      let manual = '<div class="help-section">';
+      manual += `<div class="help-title">NAME</div>`;
+      manual += `<div class="help-content">${data.name} - ${data.description}</div>`;
+      manual += `<div class="help-title" style="margin-top: 12px;">SYNOPSIS</div>`;
+      manual += `<div class="usage">${data.usage}</div>`;
+      manual += `<div class="help-title" style="margin-top: 12px;">DESCRIPTION</div>`;
+      manual += `<div class="help-content">${data.details}</div>`;
+      manual += `<div class="help-title" style="margin-top: 12px;">EXAMPLE</div>`;
+      manual += `<div class="example">${data.example}</div>`;
+      manual += '</div>';
+      printRaw(manual);
+      return '';
+    }
+
+    function showAbout() {
+      let about = '<div class="help-section">';
+      about += '<div class="help-title">MicroPython Unix Shell</div>';
+      about += '<div class="help-content">';
+      about += 'A lightweight Unix-like shell implementation for MicroPython systems.<br><br>';
+      about += '<span class="info">Features:</span><br>';
+      about += '• File system operations (navigate, create, copy, move, delete)<br>';
+      about += '• User management (create, delete, switch users)<br>';
+      about += '• Environment variables<br>';
+      about += '• Network interface control<br>';
+      about += '• System information (date, time, version)<br>';
+      about += '• Disk usage monitoring<br><br>';
+      about += '<span class="info">Supported Platforms:</span><br>';
+      about += '• Raspberry Pi Pico<br>';
+      about += '• ESP32<br>';
+      about += '• Other MicroPython compatible boards<br><br>';
+      about += '<span class="info">Learn More:</span><br>';
+      about += '• Type <span class="keyword">help</span> for command overview<br>';
+      about += '• Type <span class="keyword">man [command]</span> for detailed documentation<br>';
+      about += '• Type <span class="keyword">examples</span> for usage examples<br>';
+      about += '</div></div>';
+      printRaw(about);
+      return '';
+    }
+
+    function showExamples() {
+      let examples = '<div class="help-section">';
+      examples += '<div class="help-title">Common Usage Examples</div>';
+      examples += '<div class="help-content">';
+
+      examples += '<div class="description">Create project directories:</div>';
+      examples += '<div class="example">$ mkdir /projects<br>$ cd /projects<br>$ mkdir python node javascript<br>$ ls</div>';
+
+      examples += '<div class="description">Backup files:</div>';
+      examples += '<div class="example">$ mkdir /backup<br>$ cp /important/file.txt /backup/<br>$ cp /important/data/ /backup/</div>';
+
+      examples += '<div class="description">Create a log file:</div>';
+      examples += '<div class="example">$ echo "System started" > /var/log.txt<br>$ echo "User logged in" >> /var/log.txt<br>$ cat /var/log.txt</div>';
+
+      examples += '<div class="description">Manage users:</div>';
+      examples += '<div class="example">$ useradd alice /home/alice<br>$ passwd alice<br>$ su alice<br>$ users</div>';
+
+      examples += '<div class="description">Check disk usage:</div>';
+      examples += '<div class="example">$ du /<br>$ du -v /home</div>';
+
+      examples += '<div class="description">Network operations:</div>';
+      examples += '<div class="example">$ ifconfig<br>$ ifconfig scan<br>$ ifconfig connect</div>';
+
+      examples += '</div></div>';
+      printRaw(examples);
+      return '';
+    }
+
+    function processCommand(cmd) {
+      const trimmed = cmd.trim();
+      if (!trimmed) return;
+
+      // Display command
+      const promptLine = document.createElement('div');
+      promptLine.className = 'prompt-line';
+      promptLine.innerHTML = `<span class="prompt">$</span><span class="command">${trimmed}</span>`;
+      output.appendChild(promptLine);
+
+      // Parse command
+      const parts = trimmed.split(/\s+/);
+      const commandName = parts[0];
+      const args = parts.slice(1);
+
+      if (commands[commandName]) {
+        const result = commands[commandName].execute(args);
+        if (result) print(result);
+      } else {
+        print(`Command '${commandName}' not found. Type 'help' for available commands.`, 'error');
+      }
+
+      output.scrollTop = output.scrollHeight;
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const cmd = input.value;
+        if (cmd) {
+          commandHistory.push(cmd);
+          historyIndex = commandHistory.length;
+        }
+        processCommand(cmd);
+        input.value = '';
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (historyIndex > 0) {
+          historyIndex--;
+          input.value = commandHistory[historyIndex];
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          input.value = commandHistory[historyIndex];
+        } else {
+          historyIndex = commandHistory.length;
+          input.value = '';
+        }
+      } else if (e.key === 'l' && e.ctrlKey) {
+        e.preventDefault();
+        clearTerminal();
+      }
+    });
+
+    // Initial welcome message
+    print('MicroPython Unix Shell - Interactive Documentation', 'info');
+    print('Type "help" to get started or "man [command]" for detailed help', 'info');
+    print('');
+  </script>
+</body>
+
+</html>

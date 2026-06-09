@@ -14,7 +14,17 @@ A lightweight Unix-like shell implementation for MicroPython systems (e.g., Rasp
 
 ## Installation
 
-Place the shell module in your MicroPython project and import the shell class:
+Place the shell module in your MicroPython board's `lib` directory and import the shell class:
+
+## What you should have
+
+```text
+/lib
+└── unix
+    ├── __init__.py
+    ├── cli.py
+    └── commands.json
+```
 
 ```python
 from unix.cli import shell
@@ -35,7 +45,7 @@ sh.run("admin")
 
 The shell supports standard Unix commands. After logging in with a valid user account:
 
-```
+```shell
 ╭─[✔] (admin@Micro pico) [/]
 ╰─ $ pwd
 /

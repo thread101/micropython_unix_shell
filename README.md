@@ -28,7 +28,7 @@ sh.run("admin")
 
 ## Documentation
 
-- 📖 **[Interactive HTML Documentation](docs.html)** - Browse commands in a bash-like interface
+- 📖 **[Interactive HTML Documentation](docs/index.html)** - Browse commands in a bash-like interface
 - 📋 **[Manual Pages](micropython_unix_shell.man)** - Detailed manpage documentation
 
 ## Quick Start

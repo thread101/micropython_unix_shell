@@ -322,6 +322,9 @@ class shell:
             self.useradd(sub_commands)
         elif sub_commands[0] == commands['userdel'][0]:
             self.userdel(sub_commands)
+        elif sub_commands[0] == commands['users'][0]:
+            assert len(sub_commands) == 1, f"{sub_commands[0]} takes no argument"
+            self.stdout("\n".join(self.USERS))
         else: assert False, f"command '{sub_commands[0]}' not found"
         self.env.update_error(self.env.SUCCESS)
         return 0
